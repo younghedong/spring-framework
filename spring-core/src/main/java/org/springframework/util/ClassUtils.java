@@ -225,6 +225,7 @@ public abstract class ClassUtils {
 	public static ClassLoader getDefaultClassLoader() {
 		ClassLoader cl = null;
 		try {
+			//获取当前正在执行的线程的上下文类加载器（Context ClassLoader）
 			cl = Thread.currentThread().getContextClassLoader();
 		}
 		catch (Throwable ex) {

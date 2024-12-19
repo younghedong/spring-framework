@@ -327,6 +327,13 @@ public class SpringFactoriesLoader {
 		Assert.hasText(resourceLocation, "'resourceLocation' must not be empty");
 		ClassLoader resourceClassLoader = (classLoader != null ? classLoader :
 				SpringFactoriesLoader.class.getClassLoader());
+		/**
+		 * computeIfAbsent：
+		 * 这是 Java 8 引入的一个重要方法
+		 * 作用：如果指定的 key 不存在，则计算新的值并添加到 map 中
+		 * 使用了 lambda 表达式作为计算新值的函数
+		 * 这是一种原子操作，线程安全
+		 */
 		Map<String, SpringFactoriesLoader> loaders = cache.computeIfAbsent(
 				resourceClassLoader, key -> new ConcurrentReferenceHashMap<>());
 		return loaders.computeIfAbsent(resourceLocation, key ->

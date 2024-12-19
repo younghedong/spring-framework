@@ -241,7 +241,7 @@ public abstract class ClassUtils {
 			 *	- 用 C++ 实现，是 JVM 的一部分
 			 *	- 加载 Java 核心类库（JAVA_HOME/jre/lib）
 			 *	- 加载扩展类加载器和系统类加载器
-			 *	- 在代码中通过 null 表示
+			 *	- 在代码中通过 null 表示（当我们在代码中获取 Bootstrap ClassLoader（启动类加载器）时，会返回 null。这是因为 Bootstrap ClassLoader 是用 C++ 实现的，属于 JVM 的一部分，在 Java 代码中没有与之对应的类，所以返回 null。）
 			 *
 			 * 2. 扩展类加载器 (Extension ClassLoader)
 			 * - 加载 `JAVA_HOME/jre/lib/ext` 目录下的类库
@@ -295,16 +295,12 @@ public abstract class ClassUtils {
 			 ```java
 			 // 类的唯一性由【类加载器 + 类的全限定名】共同决定
 			 class A {
-			 public void test() {
-			 System.out.println(String.class.getClassLoader()); // null (Bootstrap ClassLoader)
-			 System.out.println(A.class.getClassLoader());      // AppClassLoader
-			 }
+				 public void test() {
+					 System.out.println(String.class.getClassLoader()); // null (Bootstrap ClassLoader)
+					 System.out.println(A.class.getClassLoader());      // AppClassLoader
+			 	}
 			 }
 			 ```
-			 *
-			 *
-			 *
-			 *
 			 *
 			 ### 三、类加载过程
 

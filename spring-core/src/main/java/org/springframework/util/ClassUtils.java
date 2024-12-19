@@ -226,6 +226,115 @@ public abstract class ClassUtils {
 		ClassLoader cl = null;
 		try {
 			//获取当前正在执行的线程的上下文类加载器（Context ClassLoader）
+			/**
+			 * 一、类加载器层次结构
+			 * Bootstrap ClassLoader (启动类加载器)
+			 *           ↑
+			 * Extension ClassLoader (扩展类加载器)
+			 *           ↑
+			 * System ClassLoader (应用类加载器)
+			 *           ↑
+			 * Custom ClassLoader (自定义类加载器)
+			 *
+			 * 1. 启动类加载器 (Bootstrap ClassLoader)
+			 *
+			 *	- 用 C++ 实现，是 JVM 的一部分
+			 *	- 加载 Java 核心类库（JAVA_HOME/jre/lib）
+			 *	- 加载扩展类加载器和系统类加载器
+			 *	- 在代码中通过 null 表示
+			 *
+			 * 2. 扩展类加载器 (Extension ClassLoader)
+			 * - 加载 `JAVA_HOME/jre/lib/ext` 目录下的类库
+			 * - Java 9 后改名为 Platform ClassLoader
+			 *
+			 * 3.应用类加载器 (System/App ClassLoader)
+			 *- 加载 classpath 下的类
+			 *- 是最常用的类加载器
+			 * - 一般通过 `Thread.currentThread().getContextClassLoader()` 获取
+			 *
+			 *
+			 * 双亲委派模型的工作流程：
+			 * 请求加载类
+			 *      ↓
+			 * 应用类加载器（System ClassLoader）
+			 *      ↓
+			 * 扩展类加载器（Extension ClassLoader）
+			 *      ↓
+			 * 启动类加载器（Bootstrap ClassLoader）
+			 *      ↓
+			 * 如果都没有找到，则反向尝试加载
+			 *
+			 * 具体示例：
+			 * // 假设要加载 java.lang.String 类
+			 * // 1. 首先到达应用类加载器
+			 * AppClassLoader.loadClass("java.lang.String")
+			 *     // 2. 委托给扩展类加载器
+			 *     ExtClassLoader.loadClass("java.lang.String")
+			 *         // 3. 委托给启动类加载器
+			 *         BootstrapClassLoader.loadClass("java.lang.String")
+			 *             // 4. 启动类加载器发现能加载（在 rt.jar 中），于是加载该类
+			 *             return StringClass
+			 *
+			 *
+			 1. **安全性**
+			 ```java
+			 // 防止用户自定义的类替换核心类库
+			 package java.lang;
+			 public class String { } // 这个类不会被加载，因为会优先使用核心类库中的 String
+			 ```
+
+			 2. **避免重复加载**
+			 ```java
+			 // 同一个类只会被加载一次
+			 Class<?> clazz1 = ClassLoader.getSystemClassLoader().loadClass("com.example.MyClass");
+			 Class<?> clazz2 = Thread.currentThread().getContextClassLoader().loadClass("com.example.MyClass");
+			 System.out.println(clazz1 == clazz2); // true
+			 ```
+
+			 3. **类的唯一性**
+			 ```java
+			 // 类的唯一性由【类加载器 + 类的全限定名】共同决定
+			 class A {
+			 public void test() {
+			 System.out.println(String.class.getClassLoader()); // null (Bootstrap ClassLoader)
+			 System.out.println(A.class.getClassLoader());      // AppClassLoader
+			 }
+			 }
+			 ```
+			 *
+			 *
+			 *
+			 *
+			 *
+			 ### 三、类加载过程
+
+			 ```
+			 加载(Loading) → 验证(Verification) → 准备(Preparation) → 解析(Resolution) → 初始化(Initialization)
+			 ```
+			 1. 加载
+			 通过类的全限定名获取二进制字节流
+			 将字节流代表的静态存储结构转为方法区运行时数据结构
+			 在内存中生成 Class 对象
+			 2. 验证
+			 文件格式验证
+			 元数据验证
+			 字节码验证
+			 符号引用验证
+			 3. 准备
+			 为静态变量分配内存
+			 设置默认初始值
+			 4. 解析
+			 将符号引用转换为直接引用
+				 a. 符号引用：用字符串描述所引用的目标
+				 类和接口的全限定名
+				 字段的名称和描述符
+				 方法的名称和描述符
+				 b. 直接引用：指向目标的指针、相对偏移量或间接定位到目标的句柄
+			 5. 初始化
+			 执行类构造器 <clinit>()
+			 静态变量赋值
+			 执行静态代码块
+			 */
 			cl = Thread.currentThread().getContextClassLoader();
 		}
 		catch (Throwable ex) {
